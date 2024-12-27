@@ -19,7 +19,7 @@ exports.hostGame = async (req, res) => {
 
         res.status(400).json({
             status: 'error',
-            message: 'Something went wrong!'
+            message: 'Something went wrong! Try changing game code'
         })
     }
 }

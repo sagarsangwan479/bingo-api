@@ -6,13 +6,13 @@ Game.hostGame = (postData) => {
     return new Promise((resolve, reject) => {
 
         const insertData = {
-            name: postData.name,
+            host_name: postData.name,
             game_code: postData.gameCode,
             players: postData.noOfPlayers,
             is_open: 1
         }
 
-        const queryString = 'INSERT INTO SET ?'
+        const queryString = 'INSERT INTO game_list SET ?'
         db.query(queryString, insertData, (err, res) => {
             if(err){
                 return reject(err);

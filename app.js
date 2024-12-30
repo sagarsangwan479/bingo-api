@@ -13,6 +13,10 @@ app.use(cors());
 
 app.use('/api', appRouter);
 
+app.use('*', (req, res) => {
+    res.send('running')
+})
+
 dbConnection.connect((err) => {
     if(err){
         throw new Error(err);

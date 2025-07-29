@@ -13,7 +13,7 @@ router.post('/host_game', oneOf([
     ]
 ]), bodyValidator, hostGame);
 
-router.post('join_game', oneOf([
+router.post('/join_game', oneOf([
     [
         body('name').notEmpty().withMessage('Name is required'),
         body('gameCode').notEmpty().withMessage('Game Code is required')

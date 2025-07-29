@@ -1,69 +1,88 @@
 const Game = require('../models/gameModel');
+const jwt = require('jsonwebtoken');
+const HostedGames = require('../models/HostedGames');
+const JoinedUsers = require('../models/joinedUsers');
 
 exports.hostGame = async (req, res) => {
     try {
-        const host = await Game.hostGame(req.body);
-
-        if(host.insertId){
-            res.json({
-                status: 'success',
-                message: 'New Game Created'
-            })
-        } else {
-            res.status(400).json({
-                status: 'failed',
-                message: 'Something went wrong!'
+        const find = await HostedGames.findOne({ game_code: req.body.gameCode });
+        if(find){
+            return res.json({
+                status: 'exists',
+                message: 'Game code already exists'
             })
         }
-    } catch(err){
 
+        const token = jwt.sign({ foo: 'bar' }, 'nn77901881100', { algorithm: 'HS256' });
+
+        const newGame = new HostedGames({
+            hosted_by_name: req.body.name,
+            hosted_by_token: token,
+            game_code: req.body.gameCode,
+            no_of_players: req.body.noOfPlayers,
+            ended: false
+        })
+
+        const save = await newGame.save();
+        
+        const newUserJoin = new JoinedUsers({
+            name: req.body.name,
+            game_code: req.body.gameCode,
+            token: token
+        })
+
+        const saveNewUser = await newUserJoin.save();
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Game Created',
+            token: token
+        })
+    } catch (error) {
+        console.error(error)
         res.status(400).json({
-            status: 'error',
-            message: 'Something went wrong! Try changing game code'
+            message: 'Something went wrong!'
         })
     }
 }
 
 exports.joinGame = async (req, res) => {
     try {
-
-        const findGame = await Game.findGameToJoin(req.body);
-
+        const findGame = await HostedGames.findOne({ game_code: req.body.gameCode, ended: false });
         if(!findGame){
-            res.status(400).json({
-                status: 'failed',
-                message: 'Game Not Found'
-            });
-            return;
-        }
-
-        const allottedSlots = await Game.findSlots(req.body);
-
-        if(allottedSlots == findGame.players){
-            res.status(400).json({
-                status: 'failed',
-                message: 'No Slots Available'
-            });
-            return;
-        }
-
-        const join = await Game.joinGame(req.body);
-
-        if(join){
-            res.json({
-                status: 'success',
-                message: 'Game Joined'
-            })
-        } else {
-            res.status(400).json({
-                status: 'failed',
-                message: 'Something went wrong!'
+            return res.json({
+                status: 'error',
+                message: 'Invalid game code/game closed'
             })
         }
-    } catch(err){
 
+        const findSlotsFilled = await JoinedUsers.find({ game_code: req.body.gameCode });
+        if(findGame.no_of_players === findSlotsFilled.length){
+            return res.json({
+                status: 'error',
+                message: 'Slots filled'
+            })
+        }
+
+        const token = jwt.sign({ foo: 'bar' }, 'nn77901881100', { algorithm: 'HS256' });
+
+        const join = new JoinedUsers({
+            name: req.body.name,
+            game_code: req.body.gameCode,
+            token: token
+        })
+
+        await join.save();
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Game Joined',
+            token: token
+        })
+
+    } catch (error) {
+        console.error(error)
         res.status(400).json({
-            status: 'error',
             message: 'Something went wrong!'
         })
     }

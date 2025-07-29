@@ -6,7 +6,7 @@ module.exports = {
 
         const errors = validationResult(req);
         if(!errors.isEmpty()){
-            return res.send({ status: 'invalid', message: 'Invalid Inputs' });
+            return res.status(400).send({ status: 'invalid', message: 'Invalid Inputs' });
         } else {
             next();
         }

@@ -4,6 +4,7 @@ require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const dbConnection = require('./config/db.js');
+dbConnection();
 
 const appRouter = require('./routes/index.js');
 
@@ -17,14 +18,6 @@ app.use('*', (req, res) => {
     res.send('running')
 })
 
-dbConnection.connect((err) => {
-    if(err){
-        throw new Error(err);
-    }
-
-    console.log('db connected');
-
-    app.listen(process.env.PORT, () => {
-        console.log('running at', process.env.PORT)
-    })
+app.listen(3000, () => {
+    console.log('running at ', 3000);
 })

@@ -95,12 +95,15 @@ exports.saveBoardData = async (req, res) => {
             throw new Error('invalid token');
         }
 
+        const bingo = JSON.parse(req.body.bingoCombinations)[0].length == req.body.bingoCounter;
+
         const data = {
             dataArr: req.body.dataArr,
             bingoCombinations: req.body.bingoCombinations,
             bingoCounter: req.body.bingoCounter,
             areItemsChosen: req.body.areItemsChosen,
-            chosenNumbersArr: req.body.chosenNumbersArr
+            chosenNumbersArr: req.body.chosenNumbersArr,
+            bingo: bingo
         }
 
         const save = await JoinedUsers.findOneAndUpdate({ token: req.headers.authorization, game_code: req.body.gameCode }, data);

@@ -15,6 +15,10 @@ const JoinedUsersSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    bingo: {
+        type: Boolean,
+        default: false
+    },
     dataArr: {
         type: String
     },

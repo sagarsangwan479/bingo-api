@@ -14,6 +14,21 @@ const JoinedUsersSchema = new mongoose.Schema({
     token: {
         type: String,
         required: true
+    },
+    dataArr: {
+        type: String
+    },
+    bingoCombinations: {
+        type: String
+    },
+    chosenNumbersArr: {
+        type: String
+    },
+    areItemsChosen: {
+        type: Number
+    },
+    bingoCounter: {
+        type: Number
     }
 }, {
     timestamps: true

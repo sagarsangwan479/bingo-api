@@ -88,6 +88,57 @@ exports.joinGame = async (req, res) => {
     }
 }
 
+exports.saveBoardData = async (req, res) => {
+    try {
+
+        if(!req.headers.authorization){
+            throw new Error('invalid token');
+        }
+
+        const data = {
+            dataArr: req.body.dataArr,
+            bingoCombinations: req.body.bingoCombinations,
+            bingoCounter: req.body.bingoCounter,
+            areItemsChosen: req.body.areItemsChosen,
+            chosenNumbersArr: req.body.chosenNumbersArr
+        }
+
+        const save = await JoinedUsers.findOneAndUpdate({ token: req.headers.authorization, game_code: req.body.gameCode }, data);
+
+        res.json({
+            status: 'success'
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(400).json({
+            message: 'Something went wrong!'
+        })
+    }
+}
+
+exports.exitGame = async (req, res) => {
+    try {
+        if(!req.headers.authorization){
+            throw new Error('invalid token');
+        }
+
+        const data = {
+            ended: true
+        }
+
+        const update = await HostedGames.findOneAndUpdate({ hosted_by_token: req.headers.authorization, game_code: req.body.gameCode }, data);
+
+        res.json({
+            status: 'success'
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(400).json({
+            message: 'Something went wrong!'
+        })
+    }
+}
+
 exports.startGame = (req, res) => {
     
 }

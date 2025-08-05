@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { hostGame, joinGame, startGame } = require('../controllers/gameController');
+const { hostGame, joinGame, startGame, saveBoardData, exitGame } = require('../controllers/gameController');
 const { oneOf, body } = require('express-validator');
 const { bodyValidator } = require('../config/middlewares');
 
@@ -19,6 +19,23 @@ router.post('/join_game', oneOf([
         body('gameCode').notEmpty().withMessage('Game Code is required')
     ]
 ]), bodyValidator, joinGame);
+
+router.post('/save_board_data', oneOf([
+    [
+        body('dataArr').notEmpty().withMessage('required'),
+        body('bingoCombinations').notEmpty().withMessage('required'),
+        body('chosenNumbersArr').notEmpty().withMessage('required'),
+        body('bingoCounter').notEmpty().withMessage('required'),
+        body('areItemsChosen').notEmpty().withMessage('required'),
+        body('gameCode').notEmpty().withMessage('required')
+    ]
+]), bodyValidator, saveBoardData);
+
+router.post('/exit_game', oneOf([
+    [
+        body('gameCode').notEmpty().withMessage('required')
+    ]
+]), bodyValidator, exitGame);
 
 router.post('start_game', oneOf([
     [

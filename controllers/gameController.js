@@ -28,7 +28,9 @@ exports.hostGame = async (req, res) => {
         const newUserJoin = new JoinedUsers({
             name: req.body.name,
             game_code: req.body.gameCode,
-            token: token
+            token: token,
+            turn: true,
+            entry_number: 1
         })
 
         const saveNewUser = await newUserJoin.save();
@@ -56,7 +58,7 @@ exports.joinGame = async (req, res) => {
             })
         }
 
-        const findSlotsFilled = await JoinedUsers.find({ game_code: req.body.gameCode });
+        const findSlotsFilled = await JoinedUsers.find({ game_code: req.body.gameCode }).sort({ entry_number: -1 });
         if(findGame.no_of_players === findSlotsFilled.length){
             return res.json({
                 status: 'error',
@@ -69,7 +71,8 @@ exports.joinGame = async (req, res) => {
         const join = new JoinedUsers({
             name: req.body.name,
             game_code: req.body.gameCode,
-            token: token
+            token: token,
+            entry_number: findSlotsFilled[0].entry_number + 1
         })
 
         await join.save();
@@ -95,9 +98,11 @@ exports.saveBoardData = async (req, res) => {
             throw new Error('invalid token');
         }
 
+        const findCurrentPlayer = await JoinedUsers.findOne({ token: req.headers.authorization, game_code: req.body.gameCode, areItemsChosen: { $ne: req.body.areItemsChosen } });
+
         const bingo = JSON.parse(req.body.bingoCombinations)[0].length == req.body.bingoCounter;
 
-        const data = {
+        let data = {
             dataArr: req.body.dataArr,
             bingoCombinations: req.body.bingoCombinations,
             bingoCounter: req.body.bingoCounter,
@@ -106,7 +111,26 @@ exports.saveBoardData = async (req, res) => {
             bingo: bingo
         }
 
+        if(findCurrentPlayer){
+            data.turn = false
+        }
+
+        if(bingo){
+            data.bingo_at = new Date()
+        }
+
         const save = await JoinedUsers.findOneAndUpdate({ token: req.headers.authorization, game_code: req.body.gameCode }, data);
+
+        
+        if(findCurrentPlayer){
+            const findTotalPlayers = await JoinedUsers.find({ game_code: req.body.gameCode });
+
+            if(findCurrentPlayer.entry_number == findTotalPlayers.length){
+                const makeTurn = await JoinedUsers.findOneAndUpdate({ game_code: req.body.gameCode, entry_number: 1 }, { turn: true });
+            } else {
+                const makeTurn = await JoinedUsers.findOneAndUpdate({ game_code: req.body.gameCode, entry_number: findCurrentPlayer.entry_number + 1 }, { turn: true })
+            }
+        }
 
         res.json({
             status: 'success'
@@ -129,7 +153,7 @@ exports.exitGame = async (req, res) => {
             ended: true
         }
 
-        const update = await HostedGames.findOneAndUpdate({ hosted_by_token: req.headers.authorization, game_code: req.body.gameCode }, data);
+        const update = await HostedGames.findOneAndUpdate({ game_code: req.body.gameCode }, data);
 
         res.json({
             status: 'success'
@@ -144,4 +168,56 @@ exports.exitGame = async (req, res) => {
 
 exports.startGame = (req, res) => {
     
+}
+
+exports.getOngoingGameData = async (req, res) => {
+    try {
+        if(!req.headers.authorization){
+            throw new Error('invalid token');
+        }
+
+        const findGame = await HostedGames.findOne({ game_code: req.body.gameCode, ended: false });
+        if(!findGame){
+            return res.json({
+                status: 'ended',
+                message: 'Game ended'
+            })
+        }
+
+        const findJoinedUsers = await JoinedUsers.find({ game_code: req.body.gameCode });
+        if(findGame.no_of_players > findJoinedUsers.length){
+            return res.json({
+                status: 'wait',
+                message: 'waiting for players to join'
+            })
+        }
+
+        const findTurn = await JoinedUsers.findOne({ game_code: req.body.gameCode, token: req.headers.authorization }).select('turn');
+        if(!findTurn){
+            throw new Error('error finding turn');
+        }
+
+        const findIfBingo = findJoinedUsers.filter(player => player.bingo);
+
+        if(findIfBingo.length) {
+            return res.json({
+                status: 'bingo',
+                message: `BINGO for ${findIfBingo[0].name}`
+            })
+        }
+
+        return res.json({
+            status: 'success',
+            message: 'Game ongoing',
+            data: {
+                turn: findTurn.turn
+            }
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(400).json({
+            status: 'error',
+            message: 'Something went wrong!'
+        })
+    }
 }

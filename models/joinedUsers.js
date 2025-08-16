@@ -19,6 +19,9 @@ const JoinedUsersSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    bingo_at: {
+        type: Date
+    },
     dataArr: {
         type: String
     },
@@ -32,6 +35,13 @@ const JoinedUsersSchema = new mongoose.Schema({
         type: Number
     },
     bingoCounter: {
+        type: Number
+    },
+    turn: {
+        type: Boolean,
+        default: false
+    },
+    entry_number: {
         type: Number
     }
 }, {

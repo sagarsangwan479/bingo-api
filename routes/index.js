@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { hostGame, joinGame, startGame, saveBoardData, exitGame } = require('../controllers/gameController');
+const { hostGame, joinGame, startGame, saveBoardData, exitGame, getOngoingGameData } = require('../controllers/gameController');
 const { oneOf, body } = require('express-validator');
 const { bodyValidator } = require('../config/middlewares');
 
@@ -42,5 +42,11 @@ router.post('start_game', oneOf([
         body('game_code').notEmpty().withMessage('Game Code Required')
     ]
 ]), bodyValidator, startGame);
+
+router.post('/get_ongoing_game_data', oneOf([
+    [
+        body('gameCode').notEmpty().withMessage('required')
+    ]
+]), bodyValidator, getOngoingGameData);
 
 module.exports = router;
